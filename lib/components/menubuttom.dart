@@ -27,7 +27,7 @@ class _MenuButtomState extends State<MenuButtom> {
         ),
         Container(
           padding: const EdgeInsets.all(10),
-          child: ElevatedButton(
+          child: OutlinedButton(
             child: Text(
               widget._title,
               style: TextStyle(

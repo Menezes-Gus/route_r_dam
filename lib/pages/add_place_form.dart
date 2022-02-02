@@ -15,6 +15,7 @@ class AddPlaceForm extends StatefulWidget {
 class _AddPlaceFormState extends State<AddPlaceForm> {
   final _formKey = GlobalKey<FormState>();
   List<String> tags = [];
+  String textValue = '';
   final nicknameController = TextEditingController();
   final addressController = TextEditingController();
 
@@ -61,9 +62,6 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
                         return null;
                       },
                     ),
-                    SizedBox(
-                      height: 0.03 * MediaQuery.of(context).size.height,
-                    ),
                     TextFormField(
                       controller: addressController,
                       decoration: const InputDecoration(
@@ -77,23 +75,22 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
                         return null;
                       },
                     ),
-                    SizedBox(
-                      height: 0.03 * MediaQuery.of(context).size.height,
-                    ),
                     TextFieldTags(
+                      key: _formKey,
                       textSeparators: const [' ', ','],
                       initialTags: const [],
                       validator: (tag) {
-                        if (tag.isEmpty) {
+                        if (tag.isEmpty || tag == null) {
                           return 'Insira pelo menos 1 categoria';
                         }
 
                         return null;
                       },
                       textFieldStyler: TextFieldStyler(
-                          helperText: 'Insira ao menos 1 Categoria',
-                          hintText: 'Categorias',
-                          textFieldBorder: const OutlineInputBorder()),
+                          helperStyle: const TextStyle(color: Colors.red),
+                          helperText: textValue,
+                          hintText: 'Categorias ex: parque, restaurante',
+                          textFieldBorder: const UnderlineInputBorder()),
                       onDelete: (String tag) {
                         tags.remove(tag);
                       },
@@ -112,9 +109,6 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
                             borderRadius: BorderRadius.circular(8.0),
                           )),
                     ),
-                    SizedBox(
-                      height: 0.03 * MediaQuery.of(context).size.height,
-                    ),
                     // TextFormField(
                     //   decoration: const InputDecoration(
                     //     border: UnderlineInputBorder(),
@@ -130,6 +124,16 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
+          if (tags.isEmpty || tags.length == 0) {
+            setState(() {
+              textValue = 'Insira pelo menos 1 categoria';
+            });
+          } else {
+            setState(() {
+              textValue = '';
+            });
+          }
+
           if (_formKey.currentState!.validate() && tags.isNotEmpty) {
             await addPlace(
                 nicknameController.text, addressController.text, tags);
@@ -144,7 +148,6 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
           }
         },
         label: const Text('Cadastrar Localidade'),
-        icon: const Icon(Icons.add),
         backgroundColor: Theme.of(context).primaryColor,
       ),
     );

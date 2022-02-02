@@ -24,6 +24,8 @@ class _ManagePlacesState extends State<ManagePlaces> {
   Future refreshPlaces() async {
     setState(() => isLoading = true);
     this.places = await DbHelper.instance.readAll();
+    this.places.sort(
+        (a, b) => a.nickname.toUpperCase().compareTo(b.nickname.toUpperCase()));
     setState(() => isLoading = false);
   }
 
@@ -36,36 +38,59 @@ class _ManagePlacesState extends State<ManagePlaces> {
   Widget build(BuildContext context) {
     final availableHeight =
         MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top;
+
     return Scaffold(
       body: Padding(
         padding:
             EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top, 0, 0),
         child: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Return(),
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text('Gerenciar Localidades'),
-                ),
-                IconButton(
-                  onPressed: () => _openAddLocalForm(context),
-                  icon: const Icon(Icons.add),
-                  color: Theme.of(context).primaryColor,
-                ),
-              ],
+            Expanded(
+              flex: 1,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Return(),
+                  const Center(
+                    child: Text('Gerenciar Localidades'),
+                  ),
+                  IconButton(
+                    onPressed: () => _openAddLocalForm(context),
+                    icon: const Icon(Icons.add),
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ],
+              ),
             ),
-            Container(
-              height: availableHeight * 0.8,
+            Expanded(
+              flex: 13,
               child: ListView.builder(
+                  padding: const EdgeInsets.all(0),
                   itemCount: places.length,
                   itemBuilder: (ctx, index) {
                     final pl = places[index];
                     return PlaceCard(pl);
                   }),
+            ),
+            Expanded(
+              flex: 1,
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    textStyle: TextStyle(
+                        fontSize:
+                            32 * MediaQuery.of(context).textScaleFactor / 2),
+                    primary: Theme.of(context).scaffoldBackgroundColor,
+                    backgroundColor: Theme.of(context).primaryColor,
+                    shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(0))),
+                  ),
+                  onPressed: () => _openAddLocalForm(context),
+                  child: const Text('Cadastrar Nova Localidade'),
+                ),
+              ),
             ),
           ],
         ),
