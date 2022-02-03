@@ -6,6 +6,8 @@ import 'package:route_r_dam/models/place.dart';
 import 'package:route_r_dam/pages/add_place_form.dart';
 
 class ManagePlaces extends StatefulWidget {
+  const ManagePlaces({Key? key}) : super(key: key);
+
   @override
   State<ManagePlaces> createState() => _ManagePlacesState();
 }
@@ -32,6 +34,15 @@ class _ManagePlacesState extends State<ManagePlaces> {
   _openAddLocalForm(context) {
     Navigator.push(context,
         MaterialPageRoute(builder: (context) => AddPlaceForm(refreshPlaces)));
+  }
+
+  _removeLocal(context, id) async {
+    setState(() => isLoading = true);
+    await DbHelper.instance.delete(id);
+    this.places = await DbHelper.instance.readAll();
+    this.places.sort(
+        (a, b) => a.nickname.toUpperCase().compareTo(b.nickname.toUpperCase()));
+    setState(() => isLoading = false);
   }
 
   @override

@@ -9,36 +9,65 @@ class PlaceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              const Text(
-                'Apelido: ',
-                style: TextStyle(fontWeight: FontWeight.bold),
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Apelido: ',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Text(place.nickname)
+                  ],
+                ),
+                Row(
+                  children: [
+                    const Text(
+                      'Endereço: ',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Text(place.address)
+                  ],
+                ),
+                Row(
+                  children: [
+                    const Text(
+                      'Categorias: ',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    ...place.categories
+                        .map((e) => Text(e.toString() + ' '))
+                        .toList(),
+                  ],
+                ),
+              ],
+            ),
+            Expanded(
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Center(child: Icon(Icons.edit)),
+                    Center(
+                      child: Icon(
+                        Icons.remove_circle,
+                        color: Colors.red.shade800,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              Text(place.nickname)
-            ],
-          ),
-          Row(
-            children: [
-              const Text(
-                'Endereço: ',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Text(place.address)
-            ],
-          ),
-          Row(
-            children: [
-              const Text(
-                'Categorias: ',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              ...place.categories.map((e) => Text(e.toString() + ' ')).toList(),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

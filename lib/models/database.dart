@@ -27,7 +27,7 @@ class DbHelper {
       _id INTEGER PRIMARY KEY AUTOINCREMENT,
       nickname TEXT NOT NULL,
       address TEXT NOT NULL,
-      categories TEXT NOT NULL
+      categories TEXT 
     )
     ''');
   }

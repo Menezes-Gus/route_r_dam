@@ -31,7 +31,7 @@ dependencies:
     sdk: flutter
   sqflite: ^2.0.2
   textfield_tags: ^1.4.2
-  flutter_tags: ^0.4.9+1
+
   path_provider: ^2.0.8
 
 
