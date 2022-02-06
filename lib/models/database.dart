@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:path/path.dart';
+import 'package:route_r_dam/models/filter.dart';
 import 'package:route_r_dam/models/place.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -21,13 +22,19 @@ class DbHelper {
     return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
+  // Future _dropDb(Database db) async {
+  //   await db.execute("DROP TABLE IF EXISTS places");
+  // }
+
   Future _createDB(Database db, int version) async {
     await db.execute('''
     CREATE TABLE places (
       _id INTEGER PRIMARY KEY AUTOINCREMENT,
       nickname TEXT NOT NULL,
       address TEXT NOT NULL,
-      categories TEXT 
+      categories TEXT, 
+      latitude REAL NOT NULL,
+      longitude REAL NOT NULL
     )
     ''');
   }
@@ -43,7 +50,14 @@ class DbHelper {
 
     final maps = await db.query(
       'places',
-      columns: ['_id', 'nickname', 'address', 'categories'],
+      columns: [
+        '_id',
+        'nickname',
+        'address',
+        'categories',
+        'latitude',
+        'longitude'
+      ],
       where: '_id = ?',
       whereArgs: [id],
     );
@@ -66,6 +80,42 @@ class DbHelper {
     final db = await instance.database;
     final result = await db.rawQuery('SELECT * FROM places LIMIT 20');
     return result.map((e) => Place.fromMap(e)).toList();
+  }
+
+  Future<List<Place>> readFiltered(List<Filter> filters) async {
+    String query =
+        'SELECT * FROM places where ' + _turnFilterIntoSql(filters.first);
+    if (filters.length > 1) {
+      for (Filter filter in filters.sublist(1)) {
+        query += ' OR ' + _turnFilterIntoSql(filter);
+      }
+    }
+
+    final db = await instance.database;
+    final result = await db.rawQuery(query);
+
+    return result.map((e) => Place.fromMap(e)).toList();
+  }
+
+  String _turnFilterIntoSql(Filter filter) {
+    String filterSql = filter.columnName +
+        filter.conector +
+        "'%" +
+        filter.filterArgs.first +
+        "%'";
+    if (filter.filterArgs.length > 1) {
+      for (String arg in filter.filterArgs.sublist(1)) {
+        filterSql += ' OR ' +
+            filter.columnName +
+            filter.conector +
+            "'%" +
+            arg +
+            "%'" +
+            ' ';
+      }
+    }
+
+    return filterSql;
   }
 
   Future<int> update(Place place) async {

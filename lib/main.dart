@@ -11,14 +11,16 @@ class RouteRDam extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.light,
       darkTheme: ThemeData(
         primarySwatch: Colors.teal,
-        fontFamily: 'Montserrat',
+        fontFamily: 'IBMPlexSans',
+        scaffoldBackgroundColor: Colors.grey.shade800,
       ),
       theme: ThemeData(
         primarySwatch: Colors.teal,
-        fontFamily: 'Montserrat',
+        fontFamily: 'IBMPlexSans',
+        scaffoldBackgroundColor: Colors.grey.shade200,
       ),
       home: const HomePage(),
     );

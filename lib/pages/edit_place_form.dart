@@ -4,29 +4,53 @@ import 'package:route_r_dam/models/database.dart';
 import 'package:route_r_dam/models/place.dart';
 import 'package:textfield_tags/textfield_tags.dart';
 
-class AddPlaceForm extends StatefulWidget {
+class EditPlaceForm extends StatefulWidget {
+  final id;
   final Future<dynamic> Function() _refreshPage;
-  const AddPlaceForm(this._refreshPage);
+  const EditPlaceForm(this._refreshPage, this.id);
 
   @override
-  State<AddPlaceForm> createState() => _AddPlaceFormState();
+  State<EditPlaceForm> createState() => _EditPlaceFormState();
 }
 
-class _AddPlaceFormState extends State<AddPlaceForm> {
+class _EditPlaceFormState extends State<EditPlaceForm> {
   final _formKey = GlobalKey<FormState>();
-  Set<String> tags = {};
+  late List<String> tags;
   final nicknameController = TextEditingController();
   final addressController = TextEditingController();
+  bool isLoading = false;
+  late Place place;
 
-  Future addPlace(
-      String nickname, String address, List<String> categories) async {
+  @override
+  void initState() {
+    super.initState();
+    getPlace();
+  }
+
+  Future getPlace() async {
+    setState(() => isLoading = true);
+    place = await DbHelper.instance.read(widget.id);
+    nicknameController.text = place.nickname;
+    addressController.text = place.address;
+    tags = place.categories;
+    setState(() => isLoading = false);
+  }
+
+  Future editPlace(
+      {required String nickname,
+      required String address,
+      required List<String> categories,
+      double latitude = 0.0,
+      double longitude = 0.0}) async {
     final place = Place(
       nickname: nickname,
       address: address,
       categories: categories,
+      latitude: latitude,
+      longitude: longitude,
     );
 
-    await DbHelper.instance.create(place);
+    await DbHelper.instance.update(place);
   }
 
   @override
@@ -67,7 +91,6 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               TextFormField(
-                                maxLength: 20,
                                 controller: nicknameController,
                                 decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
@@ -93,13 +116,6 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
                                   return null;
                                 },
                               ),
-
-                              // TextFormField(
-                              //   decoration: const InputDecoration(
-                              //     border: UnderlineInputBorder(),
-                              //     labelText: 'Apelido do Local',
-                              //   ),
-                              // ),
                             ],
                           ),
                         ),
@@ -113,10 +129,10 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
                           child: TextFieldTags(
                             key: _formKey,
                             textSeparators: const [' ', ','],
-                            initialTags: const [],
+                            initialTags: tags.first.isNotEmpty ? tags : [],
                             validator: (tag) {
                               if (tag.isEmpty) {
-                                return 'Aperte espaço para separar as categorias';
+                                return 'Insira pelo menos 1 categoria';
                               }
 
                               return null;
@@ -161,34 +177,70 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
                             width: 2,
                             color: Theme.of(context).scaffoldBackgroundColor))),
                 width: double.infinity,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    textStyle: TextStyle(
-                        fontSize:
-                            32 * MediaQuery.of(context).textScaleFactor / 2),
-                    primary: Theme.of(context).scaffoldBackgroundColor,
-                    backgroundColor: Theme.of(context).primaryColor,
-                    shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(0))),
-                  ),
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      await addPlace(nicknameController.text,
-                          addressController.text, tags.toSet().toList());
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          textStyle: TextStyle(
+                              fontSize: 32 *
+                                  MediaQuery.of(context).textScaleFactor /
+                                  2),
+                          primary: Theme.of(context).scaffoldBackgroundColor,
                           backgroundColor: Theme.of(context).primaryColor,
-                          content:
-                              const Text('Localidade cadastrada com sucesso!'),
+                          shape: const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(0))),
                         ),
-                      );
-                      widget._refreshPage();
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: const Text(
-                    'Cadastrar Localidade',
-                  ),
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            await editPlace(
+                                nickname: nicknameController.text,
+                                address: addressController.text,
+                                categories: tags);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                backgroundColor: Theme.of(context).primaryColor,
+                                content: const Text(
+                                    'Localidade cadastrada com sucesso!'),
+                              ),
+                            );
+                            widget._refreshPage();
+                            Navigator.pop(context);
+                          }
+                        },
+                        child: const Text(
+                          'Confirmar Alteração',
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          textStyle: TextStyle(
+                              fontSize: 32 *
+                                  MediaQuery.of(context).textScaleFactor /
+                                  2),
+                          primary: Theme.of(context).primaryColor,
+                          backgroundColor:
+                              Theme.of(context).scaffoldBackgroundColor,
+                          shape: const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(0))),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Text(
+                          'Cancelar',
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             )

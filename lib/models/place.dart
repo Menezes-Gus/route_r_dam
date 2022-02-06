@@ -12,13 +12,16 @@ class Place {
   final String nickname;
   final String address;
   final List<String> categories;
+  final double latitude;
+  final double longitude;
 
-  Place({
-    this.id,
-    required this.nickname,
-    required this.address,
-    required this.categories,
-  });
+  Place(
+      {this.id,
+      required this.nickname,
+      required this.address,
+      required this.categories,
+      this.longitude = 0,
+      this.latitude = 0});
 
   Map<String, dynamic> toMap() {
     return {
@@ -26,6 +29,8 @@ class Place {
       'nickname': nickname,
       'address': address,
       'categories': categories.join("/"),
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 
@@ -37,6 +42,8 @@ class Place {
       nickname: map['nickname'] as String,
       address: map['address'] as String,
       categories: categories,
+      latitude: map['latitude'] as double,
+      longitude: map['longitude'] as double,
     );
   }
 
@@ -45,10 +52,15 @@ class Place {
     String? nickname,
     String? address,
     List<String>? categories,
+    double? latitude,
+    double? longitude,
   }) =>
       Place(
-          id: id ?? this.id,
-          nickname: nickname ?? this.nickname,
-          address: address ?? this.address,
-          categories: categories ?? this.categories);
+        id: id ?? this.id,
+        nickname: nickname ?? this.nickname,
+        address: address ?? this.address,
+        categories: categories ?? this.categories,
+        latitude: latitude ?? this.latitude,
+        longitude: longitude ?? this.longitude,
+      );
 }

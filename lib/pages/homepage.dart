@@ -7,7 +7,7 @@ class HomePage extends StatelessWidget {
 
   _openManagePlaces(context) {
     Navigator.push(
-        context, MaterialPageRoute(builder: (context) => ManagePlaces()));
+        context, MaterialPageRoute(builder: (context) => const ManagePlaces()));
   }
 
   @override
@@ -50,14 +50,37 @@ Gerenciar Localidades: Cadastre, altere ou exclua localidades.
                 ],
               ),
             ),
-            const Expanded(
+            Expanded(
               flex: 2,
-              child: SizedBox(
-                height: 1,
+              child: Center(
+                heightFactor: 0.5,
+                child: Text(
+                  'Route R Dam',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: Theme.of(context).primaryColor,
+                      fontSize:
+                          (MediaQuery.of(context).textScaleFactor / 5) * 125),
+                ),
               ),
             ),
             Expanded(
-              flex: 9,
+              flex: 4,
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                      MediaQuery.of(context).size.width / 35,
+                      0,
+                      MediaQuery.of(context).size.width / 35,
+                      MediaQuery.of(context).size.height / 35),
+                  child: const Image(
+                    image: AssetImage('assets/logos/Logo.png'),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 6,
               child: Container(
                 decoration: BoxDecoration(
                   border: Border(
@@ -70,15 +93,15 @@ Gerenciar Localidades: Cadastre, altere ou exclua localidades.
                 child: Column(
                   children: [
                     Expanded(
-                      flex: 3,
+                      flex: 2,
                       child: MenuButtom('Construir Rota', _openManagePlaces),
                     ),
                     Expanded(
-                        flex: 3,
+                        flex: 2,
                         child:
                             MenuButtom('Rota Automática', _openManagePlaces)),
                     Expanded(
-                        flex: 3,
+                        flex: 2,
                         child: MenuButtom(
                             'Gerenciar Localidades', _openManagePlaces)),
                   ],
@@ -86,15 +109,13 @@ Gerenciar Localidades: Cadastre, altere ou exclua localidades.
               ),
             ),
             Expanded(
-              flex: 3,
-              child: Container(
-                child: Center(
-                  child: Text(
-                    'By: GMS',
-                    style: TextStyle(
-                      fontSize: 60 * MediaQuery.of(context).textScaleFactor / 5,
-                      color: Colors.teal.shade300,
-                    ),
+              flex: 2,
+              child: Center(
+                child: Text(
+                  'By: GMS',
+                  style: TextStyle(
+                    fontSize: 60 * MediaQuery.of(context).textScaleFactor / 5,
+                    color: Colors.teal.shade300,
                   ),
                 ),
               ),
