@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:route_r_dam/components/return.dart';
 import 'package:route_r_dam/models/database.dart';
+import 'package:route_r_dam/models/debouncer.dart';
 import 'package:route_r_dam/models/place.dart';
 import 'package:textfield_tags/textfield_tags.dart';
+import 'package:flutter_geocoder/geocoder.dart';
 
 class AddPlaceForm extends StatefulWidget {
   final Future<dynamic> Function() _refreshPage;
@@ -17,6 +22,72 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
   Set<String> tags = {};
   final nicknameController = TextEditingController();
   final addressController = TextEditingController();
+
+  String erro = '';
+  LatLng _center = LatLng(0, 0);
+  final MapController _mapController = MapController();
+  bool isLoading = false;
+
+  final _debouncer = Debouncer(milliseconds: 1000);
+
+  @override
+  initState() {
+    super.initState();
+    getPosicao();
+  }
+
+  _getLatLngFromTextField(String address) async {
+    final query = address;
+    var addresses = await Geocoder.local.findAddressesFromQuery(query);
+    var first = addresses.first;
+    if (!first.coordinates.latitude!.isNaN &&
+        !first.coordinates.longitude!.isNaN) {
+      setState(() {
+        _center =
+            LatLng(first.coordinates.latitude!, first.coordinates.longitude!);
+        _mapController.move(LatLng(_center.latitude, _center.longitude), 13.0);
+        addressController.text = first.addressLine! + ' , ' + first.locality!;
+      });
+    }
+  }
+
+  getPosicao() async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      Position posicao = await _posicaoAtual();
+      setState(() {
+        _center = LatLng(posicao.latitude, posicao.longitude);
+        _mapController.move(LatLng(posicao.latitude, posicao.longitude), 13.0);
+      });
+    } catch (e) {
+      erro = e.toString();
+    }
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  Future<Position> _posicaoAtual() async {
+    LocationPermission permissao;
+    bool ativado = await Geolocator.isLocationServiceEnabled();
+    if (!ativado) {
+      return Future.error('Por favor, habilite a localização no smartphone');
+    }
+    permissao = await Geolocator.checkPermission();
+    if (permissao == LocationPermission.denied) {
+      permissao = await Geolocator.requestPermission();
+      if (permissao == LocationPermission.denied) {
+        return Future.error('Você recisa autorizar o acesso à localização');
+      }
+    }
+    if (permissao == LocationPermission.deniedForever) {
+      return Future.error('Você precisa autorizar o acesso à localização');
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
 
   Future addPlace(
       String nickname, String address, List<String> categories) async {
@@ -48,7 +119,7 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
               ),
             ),
             Expanded(
-              flex: 12,
+              flex: 13,
               child: SingleChildScrollView(
                 child: Form(
                   key: _formKey,
@@ -70,7 +141,7 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
                                 maxLength: 20,
                                 controller: nicknameController,
                                 decoration: const InputDecoration(
-                                  border: OutlineInputBorder(),
+                                  border: UnderlineInputBorder(),
                                   labelText: 'Apelido do Local',
                                 ),
                                 validator: (value) {
@@ -83,9 +154,14 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
                               TextFormField(
                                 controller: addressController,
                                 decoration: const InputDecoration(
-                                  border: OutlineInputBorder(),
+                                  border: UnderlineInputBorder(),
                                   labelText: 'Endereço Completo',
                                 ),
+                                onChanged: (value) {
+                                  _debouncer.run(() {
+                                    _getLatLngFromTextField(value);
+                                  });
+                                },
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return 'Insira um endereço válido';
@@ -100,6 +176,51 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
                               //     labelText: 'Apelido do Local',
                               //   ),
                               // ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(5)),
+                              border: Border.all(color: Colors.grey, width: 2)),
+                          width: double.infinity,
+                          height: 300,
+                          child: FlutterMap(
+                            mapController: _mapController,
+                            options: MapOptions(
+                              onTap: (tapPosition, point) {
+                                setState(() {
+                                  _center = point;
+                                });
+                              },
+                              center: _center,
+                              zoom: 13,
+                            ),
+                            layers: [
+                              TileLayerOptions(
+                                  urlTemplate:
+                                      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                                  subdomains: ['a', 'b', 'c'],
+                                  attributionBuilder: (_) {
+                                    return const Text(
+                                        "© OpenStreetMap contributors");
+                                  }),
+                              MarkerLayerOptions(
+                                markers: [
+                                  Marker(
+                                    width: 60.0,
+                                    height: 60.0,
+                                    point: _center,
+                                    builder: (ctx) => Icon(
+                                      Icons.location_on,
+                                      color: Theme.of(context).primaryColor,
+                                    ),
+                                  ),
+                                ],
+                              )
                             ],
                           ),
                         ),

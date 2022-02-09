@@ -109,7 +109,9 @@ class _ManagePlacesState extends State<ManagePlaces> {
                     children: [
                       const Return(),
                       IconButton(
-                        onPressed: () => refreshPlaces(),
+                        onPressed: places.length == filteredPlaces.length
+                            ? null
+                            : refreshPlaces,
                         icon: const Icon(Icons.refresh),
                         color: Theme.of(context).primaryColor,
                       ),

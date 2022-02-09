@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:route_r_dam/components/menubuttom.dart';
+import 'package:route_r_dam/pages/google_maps_page.dart';
 import 'package:route_r_dam/pages/manage_places.dart';
 
 class HomePage extends StatelessWidget {
@@ -8,6 +9,11 @@ class HomePage extends StatelessWidget {
   _openManagePlaces(context) {
     Navigator.push(
         context, MaterialPageRoute(builder: (context) => const ManagePlaces()));
+  }
+
+  _openGoogleMapsPage(context) {
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => GoogleMapsPage()));
   }
 
   @override
@@ -94,7 +100,7 @@ Gerenciar Localidades: Cadastre, altere ou exclua localidades.
                   children: [
                     Expanded(
                       flex: 2,
-                      child: MenuButtom('Construir Rota', _openManagePlaces),
+                      child: MenuButtom('Construir Rota', _openGoogleMapsPage),
                     ),
                     Expanded(
                         flex: 2,
