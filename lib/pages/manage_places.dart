@@ -152,7 +152,8 @@ class _ManagePlacesState extends State<ManagePlaces> {
                     for (String i in pl.categories) {
                       categories.add(i);
                     }
-                    return PlaceCard(pl, _openEditPlaceForm, _removePlace);
+                    return PlaceCard(
+                        pl, _openEditPlaceForm, _removePlace, refreshPlaces);
                   }),
             ),
             Expanded(

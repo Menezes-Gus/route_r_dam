@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:route_r_dam/components/return.dart';
@@ -7,7 +8,6 @@ import 'package:route_r_dam/models/database.dart';
 import 'package:route_r_dam/models/debouncer.dart';
 import 'package:route_r_dam/models/place.dart';
 import 'package:textfield_tags/textfield_tags.dart';
-import 'package:flutter_geocoder/geocoder.dart';
 
 class AddPlaceForm extends StatefulWidget {
   final Future<dynamic> Function() _refreshPage;
@@ -27,8 +27,9 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
   LatLng _center = LatLng(0, 0);
   final MapController _mapController = MapController();
   bool isLoading = false;
+  bool gotCoords = false;
 
-  final _debouncer = Debouncer(milliseconds: 1000);
+  final _debouncer = Debouncer(milliseconds: 2000);
 
   @override
   initState() {
@@ -37,16 +38,69 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
   }
 
   _getLatLngFromTextField(String address) async {
-    final query = address;
-    var addresses = await Geocoder.local.findAddressesFromQuery(query);
-    var first = addresses.first;
-    if (!first.coordinates.latitude!.isNaN &&
-        !first.coordinates.longitude!.isNaN) {
+    try {
+      List<Location> locations = await locationFromAddress(address);
+      Location location = locations.first;
+
+      if (!location.latitude.isNaN && !location.longitude.isNaN) {
+        setState(() {
+          _center = LatLng(location.latitude, location.longitude);
+          _mapController.move(
+              LatLng(_center.latitude, _center.longitude), 13.0);
+          gotCoords = true;
+        });
+        await Future.delayed(const Duration(seconds: 1));
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+            location.latitude, location.longitude);
+        Placemark placemark = placemarks.first;
+        setState(() {
+          addressController.text = placemark.street! +
+              ', ' +
+              placemark.name! +
+              ', ' +
+              placemark.subLocality! +
+              ', ' +
+              placemark.locality! +
+              ', ' +
+              placemark.administrativeArea! +
+              ', ' +
+              placemark.postalCode! +
+              ', ' +
+              placemark.country!;
+        });
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  _getAddressLineFromLatLng(LatLng ltlg) async {
+    List<Placemark> placemarks =
+        await placemarkFromCoordinates(ltlg.latitude, ltlg.longitude);
+
+    Placemark placemark = placemarks.first;
+    if (placemark.name!.isNotEmpty) {
       setState(() {
-        _center =
-            LatLng(first.coordinates.latitude!, first.coordinates.longitude!);
+        _center = ltlg;
         _mapController.move(LatLng(_center.latitude, _center.longitude), 13.0);
-        addressController.text = first.addressLine! + ' , ' + first.locality!;
+        gotCoords = true;
+        try {
+          addressController.text = placemark.street! +
+              ', ' +
+              placemark.name! +
+              ', ' +
+              placemark.subLocality! +
+              ', ' +
+              placemark.locality! +
+              ', ' +
+              placemark.administrativeArea! +
+              ', ' +
+              placemark.postalCode! +
+              ', ' +
+              placemark.country!;
+        } catch (e) {
+          erro = e.toString();
+        }
       });
     }
   }
@@ -73,28 +127,33 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
     LocationPermission permissao;
     bool ativado = await Geolocator.isLocationServiceEnabled();
     if (!ativado) {
-      return Future.error('Por favor, habilite a localização no smartphone');
+      widget._refreshPage();
+      Navigator.pop(context);
     }
     permissao = await Geolocator.checkPermission();
     if (permissao == LocationPermission.denied) {
       permissao = await Geolocator.requestPermission();
       if (permissao == LocationPermission.denied) {
-        return Future.error('Você recisa autorizar o acesso à localização');
+        widget._refreshPage();
+        Navigator.pop(context);
       }
     }
     if (permissao == LocationPermission.deniedForever) {
-      return Future.error('Você precisa autorizar o acesso à localização');
+      widget._refreshPage();
+      Navigator.pop(context);
     }
 
     return await Geolocator.getCurrentPosition();
   }
 
-  Future addPlace(
-      String nickname, String address, List<String> categories) async {
+  Future addPlace(String nickname, String address, List<String> categories,
+      double latitude, double longitude) async {
     final place = Place(
       nickname: nickname,
       address: address,
       categories: categories,
+      latitude: latitude,
+      longitude: longitude,
     );
 
     await DbHelper.instance.create(place);
@@ -138,6 +197,7 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               TextFormField(
+                                textCapitalization: TextCapitalization.words,
                                 maxLength: 20,
                                 controller: nicknameController,
                                 decoration: const InputDecoration(
@@ -152,12 +212,16 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
                                 },
                               ),
                               TextFormField(
+                                textCapitalization: TextCapitalization.words,
                                 controller: addressController,
                                 decoration: const InputDecoration(
                                   border: UnderlineInputBorder(),
                                   labelText: 'Endereço Completo',
                                 ),
                                 onChanged: (value) {
+                                  setState(() {
+                                    gotCoords = false;
+                                  });
                                   _debouncer.run(() {
                                     _getLatLngFromTextField(value);
                                   });
@@ -169,13 +233,6 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
                                   return null;
                                 },
                               ),
-
-                              // TextFormField(
-                              //   decoration: const InputDecoration(
-                              //     border: UnderlineInputBorder(),
-                              //     labelText: 'Apelido do Local',
-                              //   ),
-                              // ),
                             ],
                           ),
                         ),
@@ -193,8 +250,9 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
                             options: MapOptions(
                               onTap: (tapPosition, point) {
                                 setState(() {
-                                  _center = point;
+                                  gotCoords = false;
                                 });
+                                _getAddressLineFromLatLng(point);
                               },
                               center: _center,
                               zoom: 13,
@@ -237,7 +295,7 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
                             initialTags: const [],
                             validator: (tag) {
                               if (tag.isEmpty) {
-                                return 'Aperte espaço para separar as categorias';
+                                return '';
                               }
 
                               return null;
@@ -255,16 +313,17 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
                               tags.add(tag);
                             },
                             tagsStyler: TagsStyler(
-                                tagCancelIcon: const Icon(
-                                  Icons.cancel,
-                                  size: 18.0,
-                                  color: Colors.white,
-                                ),
-                                tagPadding: const EdgeInsets.all(6.0),
-                                tagDecoration: BoxDecoration(
-                                  color: Theme.of(context).primaryColor,
-                                  borderRadius: BorderRadius.circular(8.0),
-                                )),
+                              tagCancelIcon: const Icon(
+                                Icons.cancel,
+                                size: 18.0,
+                                color: Colors.white,
+                              ),
+                              tagPadding: const EdgeInsets.all(6.0),
+                              tagDecoration: BoxDecoration(
+                                color: Theme.of(context).primaryColor,
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                            ),
                           ),
                         )
                       ],
@@ -292,21 +351,27 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
                     shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(0))),
                   ),
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      await addPlace(nicknameController.text,
-                          addressController.text, tags.toSet().toList());
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          backgroundColor: Theme.of(context).primaryColor,
-                          content:
-                              const Text('Localidade cadastrada com sucesso!'),
-                        ),
-                      );
-                      widget._refreshPage();
-                      Navigator.pop(context);
-                    }
-                  },
+                  onPressed: gotCoords
+                      ? () async {
+                          if (_formKey.currentState!.validate() && gotCoords) {
+                            await addPlace(
+                                nicknameController.text,
+                                addressController.text,
+                                tags.toSet().toList(),
+                                _center.latitude,
+                                _center.longitude);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                backgroundColor: Colors.grey,
+                                content:
+                                    Text('Localidade cadastrada com sucesso!'),
+                              ),
+                            );
+                            widget._refreshPage();
+                            Navigator.pop(context);
+                          }
+                        }
+                      : null,
                   child: const Text(
                     'Cadastrar Localidade',
                   ),

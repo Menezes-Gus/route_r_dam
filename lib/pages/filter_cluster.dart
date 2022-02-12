@@ -80,21 +80,6 @@ class _FilterClusterState extends State<FilterCluster> {
                               ],
                             ),
                           ),
-                          Flexible(
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Filtrar localidades que contenham as cidades...',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      fontSize: 32 *
-                                          MediaQuery.of(context)
-                                              .textScaleFactor /
-                                          2),
-                                ),
-                              ],
-                            ),
-                          ),
                         ],
                       ),
                     ),

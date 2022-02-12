@@ -76,13 +76,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_geocoder:
-    dependency: "direct main"
-    description:
-      name: flutter_geocoder
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.2.2-nullsafety"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -107,6 +100,27 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  geocode:
+    dependency: "direct main"
+    description:
+      name: geocode
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.1"
+  geocoding:
+    dependency: "direct main"
+    description:
+      name: geocoding
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.0.2"
+  geocoding_platform_interface:
+    dependency: transitive
+    description:
+      name: geocoding_platform_interface
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.0.1"
   geolocator:
     dependency: "direct main"
     description:
@@ -150,7 +164,7 @@ packages:
     source: hosted
     version: "0.1.0"
   http:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: http
       url: "https://pub.dartlang.org"
@@ -164,7 +178,7 @@ packages:
     source: hosted
     version: "4.0.0"
   intl:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: intl
       url: "https://pub.dartlang.org"

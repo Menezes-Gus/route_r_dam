@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:route_r_dam/components/menubuttom.dart';
-import 'package:route_r_dam/pages/google_maps_page.dart';
+import 'package:route_r_dam/models/place.dart';
+import 'package:route_r_dam/pages/build_route_page.dart';
+
 import 'package:route_r_dam/pages/manage_places.dart';
+import 'package:route_r_dam/pages/test.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -11,9 +14,22 @@ class HomePage extends StatelessWidget {
         context, MaterialPageRoute(builder: (context) => const ManagePlaces()));
   }
 
-  _openGoogleMapsPage(context) {
+  _openTestPage(context) {
     Navigator.push(
-        context, MaterialPageRoute(builder: (context) => GoogleMapsPage()));
+        context, MaterialPageRoute(builder: (context) => const TestPage()));
+  }
+
+  _openBuildRoutePage(context) {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => BuildRoutePage(Place(
+                id: -1,
+                address: 'Local Atual',
+                categories: [],
+                latitude: 0.0,
+                longitude: 0.0,
+                nickname: 'Local Atual'))));
   }
 
   @override
@@ -45,6 +61,7 @@ class HomePage extends StatelessWidget {
                       triggerMode: TooltipTriggerMode.tap,
                       showDuration: const Duration(seconds: 5),
                       message: '''
+
 Construir Rota: Construa uma rota de viagem utilizando localidades já cadastradas. Selecione os locais que deseja visitar e compare as distâncias.
             
 Rota Automática: Automaticamente constrói rota otimizada baseada em todos os locais cadastrados no aplicativo.
@@ -100,7 +117,7 @@ Gerenciar Localidades: Cadastre, altere ou exclua localidades.
                   children: [
                     Expanded(
                       flex: 2,
-                      child: MenuButtom('Construir Rota', _openGoogleMapsPage),
+                      child: MenuButtom('Construir Rota', _openBuildRoutePage),
                     ),
                     Expanded(
                         flex: 2,

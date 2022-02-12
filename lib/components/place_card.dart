@@ -6,8 +6,9 @@ class PlaceCard extends StatelessWidget {
 
   final Function(dynamic, int) _remove;
   final Function(dynamic, int) _edit;
+  final Future<void> Function() _refreshPlaces;
 
-  const PlaceCard(this.place, this._edit, this._remove);
+  const PlaceCard(this.place, this._edit, this._remove, this._refreshPlaces);
 
   @override
   Widget build(BuildContext context) {
@@ -105,6 +106,7 @@ class PlaceCard extends StatelessWidget {
                   IconButton(
                     onPressed: () {
                       _edit(context, place.id!);
+                      _refreshPlaces();
                     },
                     icon: Icon(
                       Icons.edit,
@@ -130,6 +132,7 @@ class PlaceCard extends StatelessWidget {
                                 TextButton(
                                   onPressed: () {
                                     _remove(context, place.id!);
+                                    _refreshPlaces();
                                     Navigator.pop(context);
                                   },
                                   child: const Text('Sim'),

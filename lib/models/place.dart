@@ -20,8 +20,8 @@ class Place {
       required this.nickname,
       required this.address,
       required this.categories,
-      this.longitude = 0,
-      this.latitude = 0});
+      required this.longitude,
+      required this.latitude});
 
   Map<String, dynamic> toMap() {
     return {
