@@ -4,6 +4,7 @@ import 'package:route_r_dam/models/place.dart';
 import 'package:route_r_dam/pages/build_route_page.dart';
 
 import 'package:route_r_dam/pages/manage_places.dart';
+import 'package:route_r_dam/pages/show_map.dart';
 import 'package:route_r_dam/pages/test.dart';
 
 class HomePage extends StatelessWidget {
@@ -134,11 +135,15 @@ Gerenciar Localidades: Cadastre, altere ou exclua localidades.
             Expanded(
               flex: 2,
               child: Center(
-                child: Text(
-                  'By: GMS',
-                  style: TextStyle(
-                    fontSize: 60 * MediaQuery.of(context).textScaleFactor / 5,
-                    color: Colors.teal.shade300,
+                child: TextButton(
+                  onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => const ShowMap())),
+                  child: Text(
+                    'By: GMS',
+                    style: TextStyle(
+                      fontSize: 60 * MediaQuery.of(context).textScaleFactor / 5,
+                      color: Colors.teal.shade300,
+                    ),
                   ),
                 ),
               ),
