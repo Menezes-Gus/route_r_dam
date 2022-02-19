@@ -32,7 +32,7 @@ class RouteCalculator {
     Place place = Place(
         id: -1,
         address: 'Local Atual',
-        categories: [],
+        categories: {},
         latitude: latLng.latitude,
         longitude: latLng.longitude,
         nickname: 'Local Atual');

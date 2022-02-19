@@ -4,8 +4,10 @@ import 'package:route_r_dam/models/place.dart';
 import 'package:route_r_dam/pages/build_route_page.dart';
 
 import 'package:route_r_dam/pages/manage_places.dart';
+import 'package:route_r_dam/pages/select_starting_point.dart';
 import 'package:route_r_dam/pages/show_map.dart';
 import 'package:route_r_dam/pages/test.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -27,10 +29,15 @@ class HomePage extends StatelessWidget {
             builder: (context) => BuildRoutePage(Place(
                 id: -1,
                 address: 'Local Atual',
-                categories: [],
+                categories: {},
                 latitude: 0.0,
                 longitude: 0.0,
                 nickname: 'Local Atual'))));
+  }
+
+  _openSelectStartingPoint(context) {
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => SelectStartingPoint()));
   }
 
   @override
@@ -118,7 +125,8 @@ Gerenciar Localidades: Cadastre, altere ou exclua localidades.
                   children: [
                     Expanded(
                       flex: 2,
-                      child: MenuButtom('Construir Rota', _openBuildRoutePage),
+                      child: MenuButtom(
+                          'Construir Rota', _openSelectStartingPoint),
                     ),
                     Expanded(
                         flex: 2,
@@ -135,12 +143,18 @@ Gerenciar Localidades: Cadastre, altere ou exclua localidades.
             Expanded(
               flex: 2,
               child: Center(
+                heightFactor: 5,
                 child: TextButton(
-                  onPressed: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => const ShowMap())),
+                  onPressed: () async {
+                    if (!await launch(
+                        'https://www.buymeacoffee.com/gustavomenezes')) {
+                      throw 'Could not launch';
+                    }
+                  },
                   child: Text(
-                    'By: GMS',
+                    'Apoie o desenvolvedor',
                     style: TextStyle(
+                      decoration: TextDecoration.underline,
                       fontSize: 60 * MediaQuery.of(context).textScaleFactor / 5,
                       color: Colors.teal.shade300,
                     ),

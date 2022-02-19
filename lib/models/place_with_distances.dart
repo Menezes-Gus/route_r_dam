@@ -4,7 +4,7 @@ class PlaceWithDistances {
   final int id;
   final String nickname;
   final String address;
-  final List<String> categories;
+  final Set<String> categories;
   final double latitude;
   final double longitude;
   final Map<Place, double> distances;

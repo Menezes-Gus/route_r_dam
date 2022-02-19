@@ -106,9 +106,6 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
   }
 
   getPosicao() async {
-    setState(() {
-      isLoading = true;
-    });
     try {
       Position posicao = await _posicaoAtual();
       setState(() {
@@ -118,9 +115,7 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
     } catch (e) {
       erro = e.toString();
     }
-    setState(() {
-      isLoading = false;
-    });
+    setState(() {});
   }
 
   Future<Position> _posicaoAtual() async {
@@ -151,7 +146,7 @@ class _AddPlaceFormState extends State<AddPlaceForm> {
     final place = Place(
       nickname: nickname,
       address: address,
-      categories: categories,
+      categories: categories.toSet(),
       latitude: latitude,
       longitude: longitude,
     );

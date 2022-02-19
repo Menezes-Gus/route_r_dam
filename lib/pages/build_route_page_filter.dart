@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:route_r_dam/components/return.dart';
 import 'package:route_r_dam/components/toggle_buttom.dart';
-import 'package:route_r_dam/models/filter.dart';
 import 'package:route_r_dam/models/place_with_distances.dart';
 
-class FilterCluster extends StatefulWidget {
-  final Set<String> _categories;
-  final Future<void> Function(List<Filter>)? doFilter;
-  final Function(bool Function(PlaceWithDistances))? filter;
+class BuildRoutePageFilter extends StatefulWidget {
+  final Set<String> categories;
+  final void Function(bool Function(PlaceWithDistances)) func;
 
-  const FilterCluster(this._categories, {this.doFilter, this.filter});
+  const BuildRoutePageFilter(
+      {Key? key, required this.categories, required this.func})
+      : super(key: key);
 
   @override
-  State<FilterCluster> createState() => _FilterClusterState();
+  State<BuildRoutePageFilter> createState() => _BuildRoutePageFilterState();
 }
 
-class _FilterClusterState extends State<FilterCluster> {
+class _BuildRoutePageFilterState extends State<BuildRoutePageFilter> {
   Set<String> categoriesFilters = {};
 
   _addFilterValuesFromToggles(String filterValue) {
@@ -28,8 +28,18 @@ class _FilterClusterState extends State<FilterCluster> {
 
   @override
   Widget build(BuildContext context) {
+    bool Function(PlaceWithDistances) filterFunctionCategories = (a) {
+      bool test = false;
+      for (String b in categoriesFilters) {
+        if (a.categories.contains(b)) {
+          test = true;
+        }
+      }
+      return test;
+    };
+
     final _categories =
-        widget._categories.where((e) => e.isNotEmpty || e != "").toSet();
+        widget.categories.where((e) => e.isNotEmpty || e != "").toSet();
     return Scaffold(
       body: Padding(
         padding:
@@ -116,13 +126,7 @@ class _FilterClusterState extends State<FilterCluster> {
                         .where((e) => e.isNotEmpty || e != "")
                         .toList()
                         .isNotEmpty) {
-                      Filter filter = Filter(
-                          'categories',
-                          categoriesFilters.toList()
-                            ..where((e) => e.isNotEmpty || e != "").toList(),
-                          true);
-                      List<Filter> filters = [filter];
-                      widget.doFilter!(filters);
+                      widget.func(filterFunctionCategories);
                     }
                     Navigator.pop(context);
                   },

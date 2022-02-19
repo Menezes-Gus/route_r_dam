@@ -11,7 +11,7 @@ class Place {
   final int? id;
   final String nickname;
   final String address;
-  final List<String> categories;
+  final Set<String> categories;
   final double latitude;
   final double longitude;
 
@@ -41,7 +41,7 @@ class Place {
       id: map['_id'] as int?,
       nickname: map['nickname'] as String,
       address: map['address'] as String,
-      categories: categories,
+      categories: categories.toSet(),
       latitude: map['latitude'] as double,
       longitude: map['longitude'] as double,
     );
@@ -51,7 +51,7 @@ class Place {
     int? id,
     String? nickname,
     String? address,
-    List<String>? categories,
+    Set<String>? categories,
     double? latitude,
     double? longitude,
   }) =>

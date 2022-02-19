@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -20,7 +21,7 @@ class EditPlaceForm extends StatefulWidget {
 
 class _EditPlaceFormState extends State<EditPlaceForm> {
   final _formKey = GlobalKey<FormState>();
-  List<String> tags = [];
+  Set<String> tags = {};
   final nicknameController = TextEditingController();
   final addressController = TextEditingController();
   bool isLoading = false;
@@ -38,6 +39,16 @@ class _EditPlaceFormState extends State<EditPlaceForm> {
   void initState() {
     super.initState();
     getPlace();
+  }
+
+  Set<String> _transformSetIntoSetWithoutNullValues(Set set) {
+    Set<String> setWithoutNull = {};
+    for (String s in set) {
+      if (s.isNotEmpty && s != null && s != '' && s != ' ') {
+        setWithoutNull.add(s);
+      }
+    }
+    return setWithoutNull;
   }
 
   _getLatLngFromTextField(String address) async {
@@ -167,12 +178,14 @@ class _EditPlaceFormState extends State<EditPlaceForm> {
   }
 
   Future editPlace(
-      {required String nickname,
+      {required int id,
+      required String nickname,
       required String address,
-      required List<String> categories,
+      required Set<String> categories,
       required double latitude,
       required double longitude}) async {
     final place = Place(
+      id: id,
       nickname: nickname,
       address: address,
       categories: categories,
@@ -317,7 +330,7 @@ class _EditPlaceFormState extends State<EditPlaceForm> {
                             key: _formKey,
                             textSeparators: const [' ', ','],
                             initialTags: tags.isNotEmpty
-                                ? (tags.first.isNotEmpty ? tags : [])
+                                ? (tags.first.isNotEmpty ? tags.toList() : [])
                                 : [],
                             validator: (tag) {
                               if (tag.isEmpty) {
@@ -333,10 +346,24 @@ class _EditPlaceFormState extends State<EditPlaceForm> {
                               textFieldBorder: const UnderlineInputBorder(),
                             ),
                             onDelete: (String tag) {
+                              setState(() {
+                                gotCoords = false;
+                              });
+
                               tags.remove(tag);
+                              setState(() {
+                                gotCoords = true;
+                              });
                             },
                             onTag: (String tag) {
+                              setState(() {
+                                gotCoords = false;
+                              });
+
                               tags.add(tag);
+                              setState(() {
+                                gotCoords = true;
+                              });
                             },
                             tagsStyler: TagsStyler(
                               tagCancelIcon: const Icon(
@@ -380,9 +407,11 @@ class _EditPlaceFormState extends State<EditPlaceForm> {
                   onPressed: () async {
                     if (_formKey.currentState!.validate() && gotCoords) {
                       await editPlace(
+                          id: widget.id,
                           nickname: nicknameController.text,
                           address: addressController.text,
-                          categories: tags,
+                          categories:
+                              _transformSetIntoSetWithoutNullValues(tags),
                           latitude: _center.latitude,
                           longitude: _center.longitude);
                       ScaffoldMessenger.of(context).showSnackBar(

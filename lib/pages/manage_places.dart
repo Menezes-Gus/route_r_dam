@@ -56,7 +56,8 @@ class _ManagePlacesState extends State<ManagePlaces> {
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => FilterCluster(categories, _filter)));
+            builder: (context) =>
+                FilterCluster(categories, doFilter: _filter)));
   }
 
   _openEditPlaceForm(context, int id) {

@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:route_r_dam/models/place.dart';
+import 'package:route_r_dam/pages/build_route_page.dart';
 
 class PlaceCard extends StatelessWidget {
   final Place place;
 
-  final Function(dynamic, int) _remove;
-  final Function(dynamic, int) _edit;
-  final Future<void> Function() _refreshPlaces;
+  final Function(dynamic, int)? remove;
+  final Function(dynamic, int)? edit;
+  final Future<void> Function()? refreshPlaces;
+  final bool fromStartingPoint;
 
-  const PlaceCard(this.place, this._edit, this._remove, this._refreshPlaces);
+  const PlaceCard(this.place, this.edit, this.remove, this.refreshPlaces,
+      {this.fromStartingPoint = false});
+  const PlaceCard.startingPoint(this.place,
+      {this.remove,
+      this.edit,
+      this.refreshPlaces,
+      this.fromStartingPoint = true});
 
   @override
   Widget build(BuildContext context) {
@@ -100,52 +108,78 @@ class PlaceCard extends StatelessWidget {
             Expanded(
               flex: 2,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: fromStartingPoint
+                    ? MainAxisAlignment.center
+                    : MainAxisAlignment.end,
+                crossAxisAlignment: fromStartingPoint
+                    ? CrossAxisAlignment.center
+                    : CrossAxisAlignment.end,
                 children: [
-                  IconButton(
-                    onPressed: () {
-                      _edit(context, place.id!);
-                      _refreshPlaces();
-                    },
-                    icon: Icon(
-                      Icons.edit,
-                      color: Theme.of(context).scaffoldBackgroundColor,
+                  if (fromStartingPoint)
+                    IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => BuildRoutePage(Place(
+                                      id: place.id,
+                                      address: place.address,
+                                      categories: place.categories,
+                                      latitude: place.latitude,
+                                      longitude: place.longitude,
+                                      nickname: place.nickname,
+                                    ))));
+                      },
+                      icon: Icon(
+                        Icons.location_pin,
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      showDialog(
-                          context: context,
-                          builder: (BuildContext ctx) {
-                            return AlertDialog(
-                              title: const Text("ATENÇÃO"),
-                              content: const Text(
-                                  'Uma vez excluida, não é possível recuperar a localidade. Deseja prosseguir mesmo assim?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
-                                  child: const Text('Não'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    _remove(context, place.id!);
-                                    _refreshPlaces();
-                                    Navigator.pop(context);
-                                  },
-                                  child: const Text('Sim'),
-                                ),
-                              ],
-                            );
-                          });
-                    },
-                    icon: Icon(
-                      Icons.remove_circle,
-                      color: Colors.red.shade800,
+                  if (!fromStartingPoint)
+                    IconButton(
+                      onPressed: () {
+                        edit!(context, place.id!);
+                        refreshPlaces!();
+                      },
+                      icon: Icon(
+                        Icons.edit,
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                      ),
                     ),
-                  ),
+                  if (!fromStartingPoint)
+                    IconButton(
+                      onPressed: () {
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext ctx) {
+                              return AlertDialog(
+                                title: const Text("ATENÇÃO"),
+                                content: const Text(
+                                    'Uma vez excluida, não é possível recuperar a localidade. Deseja prosseguir mesmo assim?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text('Não'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      remove!(context, place.id!);
+                                      refreshPlaces!();
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text('Sim'),
+                                  ),
+                                ],
+                              );
+                            });
+                      },
+                      icon: Icon(
+                        Icons.remove_circle,
+                        color: Colors.red.shade800,
+                      ),
+                    ),
                 ],
               ),
             ),

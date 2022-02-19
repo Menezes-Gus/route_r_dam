@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:route_r_dam/components/place_card_route_selection.dart';
 
 import 'package:route_r_dam/components/return.dart';
+import 'package:route_r_dam/components/text_with_icon.dart';
 import 'package:route_r_dam/models/database.dart';
 import 'package:route_r_dam/models/distance_calculator.dart';
 import 'package:route_r_dam/models/outer_maps_operations.dart';
 import 'package:route_r_dam/models/place.dart';
 import 'package:route_r_dam/models/place_with_distances.dart';
+import 'package:route_r_dam/pages/build_route_page_filter.dart';
 import 'dart:math' as math;
+
+import 'package:route_r_dam/pages/filter_cluster.dart';
 
 class BuildRoutePage extends StatefulWidget {
   final Place _startingPlace;
@@ -17,19 +22,89 @@ class BuildRoutePage extends StatefulWidget {
 
 class _BuildRoutePageState extends State<BuildRoutePage> {
   bool isLoading = false;
+  bool gettingData = true;
   List<Place> places = [];
   Set<PlaceWithDistances> placesWithDistances = {};
+  Set<PlaceWithDistances> unfilteredPlacesWithDistances = {};
   Set<PlaceWithDistances> logPlacesWithDistances = {};
   late Set<String> categories = {};
-  List<Card> cards = [];
+  List<PlaceCardRouteSelection> cards = [];
   String pageTitle = '';
   Set<int> ids = {};
+  int routeSchemeSize = 1;
+  bool filtered = false;
 
   @override
   initState() {
     super.initState();
+
     _refreshPlaces();
     _getPlacesWithDistances();
+  }
+
+  List<TextWithIcon> _buildTextsWithIcon() {
+    List<TextWithIcon> twi = [];
+    for (PlaceWithDistances lpwd in logPlacesWithDistances) {
+      twi.add(TextWithIcon(
+        placeName: lpwd.nickname,
+      ));
+    }
+    return twi;
+  }
+
+  // _filterPlaces(
+  //     {List<String>? categoriesList,
+  //     bool includeClose = false,
+  //     bool includeNextTo = false,
+  //     bool includeFar = false}) {
+  //   Set<String> categoriesSet = {};
+  //   bool includeCategories;
+  //   try {
+  //     categoriesSet = categoriesList!.toSet();
+  //     includeCategories = true;
+  //   } catch (e) {
+  //     includeCategories = false;
+  //   }
+
+  //   bool _filterCategories(Set<String> categories) {
+  //     bool test = false;
+  //     for (String cs in categoriesSet) {
+  //       if (categories.contains(cs)) {
+  //         test = true;
+  //       }
+  //     }
+  //     return test;
+  //   }
+
+  //   if (includeCategories) {
+  //     placesWithDistances = placesWithDistances
+  //         .where((element) => _filterCategories(element.categories))
+  //         .toSet();
+  //   }
+  //   if (includeClose) {
+  //     placesWithDistances = placesWithDistances.where((element) => element.distances)
+  //   }
+  // }
+  // void _unfilter() {
+  //   setState(() {
+  //     placesWithDistances = unfilteredPlacesWithDistances;
+  //     filtered = false;
+  //   });
+  // }
+
+  _changeRouteSchemeSize(bool expand) {
+    setState(() {
+      isLoading = true;
+    });
+    if (expand) {
+      routeSchemeSize = 5;
+    } else {
+      routeSchemeSize = 1;
+    }
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
   _initPlacesCards() {
@@ -37,24 +112,18 @@ class _BuildRoutePageState extends State<BuildRoutePage> {
       isLoading = true;
     });
     logPlacesWithDistances.add(placesWithDistances.last);
+    unfilteredPlacesWithDistances.remove(placesWithDistances.last);
     placesWithDistances.remove(placesWithDistances.last);
+
     ids.add(logPlacesWithDistances.last.id);
     Map<Place, double> mapPlaces = logPlacesWithDistances.last.distances;
-    print(mapPlaces);
     pageTitle = logPlacesWithDistances.last.nickname;
-    Card card;
+    PlaceCardRouteSelection card;
     for (Place p in mapPlaces.keys) {
-      card = Card(
-        child: Column(children: [
-          Text(
-            p.nickname,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          Text('Distância: ' + mapPlaces[p].toString() + ' m'),
-          ElevatedButton(
-              onPressed: () => _addPlaceWithDistancesToRoute(p.id!),
-              child: const Text('Adicionar a Rota'))
-        ]),
+      card = PlaceCardRouteSelection(
+        addPlaceWithDistancesToRoute: _addPlaceWithDistancesToRoute,
+        distance: mapPlaces[p],
+        place: p,
       );
       cards.add(card);
     }
@@ -71,21 +140,13 @@ class _BuildRoutePageState extends State<BuildRoutePage> {
     Map<Place, double> mapPlaces = logPlacesWithDistances.last.distances;
 
     pageTitle = logPlacesWithDistances.last.nickname;
-    Card card;
+    PlaceCardRouteSelection card;
     for (Place p in mapPlaces.keys) {
       if (ids.where((element) => element == p.id).isEmpty) {
-        card = Card(
-          child: Column(children: [
-            Text(
-              p.nickname,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            Text('Distância: ' + mapPlaces[p].toString() + ' m'),
-            ElevatedButton(
-              onPressed: () => _addPlaceWithDistancesToRoute(p.id!),
-              child: const Text('Adicionar a Rota'),
-            )
-          ]),
+        card = PlaceCardRouteSelection(
+          addPlaceWithDistancesToRoute: _addPlaceWithDistancesToRoute,
+          distance: mapPlaces[p],
+          place: p,
         );
         cards.add(card);
       }
@@ -95,20 +156,22 @@ class _BuildRoutePageState extends State<BuildRoutePage> {
     });
   }
 
-  _addPlaceWithDistancesToRoute(int id) {
+  void _addPlaceWithDistancesToRoute(int id) {
     setState(() {
       isLoading = true;
     });
 
     logPlacesWithDistances
         .add(placesWithDistances.where((e) => e.id == id).toSet().first);
+    unfilteredPlacesWithDistances
+        .remove(placesWithDistances.where((e) => e.id == id).toSet().first);
     placesWithDistances
         .remove(placesWithDistances.where((e) => e.id == id).toSet().first);
 
     ids.add(logPlacesWithDistances.last.id);
 
     _refreshPlacesCards();
-    print(logPlacesWithDistances);
+
     setState(() {
       isLoading = false;
     });
@@ -130,6 +193,11 @@ class _BuildRoutePageState extends State<BuildRoutePage> {
         .toSet()
         .first);
 
+    unfilteredPlacesWithDistances.add(logPlacesWithDistances
+        .where((e) => e.id == idToReturnTo)
+        .toSet()
+        .first);
+
     logPlacesWithDistances.remove(logPlacesWithDistances
         .where((e) => e.id == idToReturnTo)
         .toSet()
@@ -138,7 +206,6 @@ class _BuildRoutePageState extends State<BuildRoutePage> {
     ids.remove(idToReturnTo);
 
     _refreshPlacesCards();
-    print(logPlacesWithDistances);
     setState(() {
       isLoading = false;
     });
@@ -149,7 +216,6 @@ class _BuildRoutePageState extends State<BuildRoutePage> {
       isLoading = true;
     });
     if (widget._startingPlace.id!.isNegative) {
-      print('entrou no if que testa negativo');
       Place place = await RouteCalculator(context).getActualPosition();
       places.add(
         Place(
@@ -162,7 +228,6 @@ class _BuildRoutePageState extends State<BuildRoutePage> {
         ),
       );
     } else {
-      print('entrou no if que busca do banco de dados');
       Place place = await DbHelper.instance.read(widget._startingPlace.id!);
       places.add(
         Place(
@@ -174,7 +239,9 @@ class _BuildRoutePageState extends State<BuildRoutePage> {
           latitude: place.latitude,
         ),
       );
-      places.remove(place);
+      places.removeWhere(
+        (element) => element.id == place.id,
+      );
       places.add(place);
     }
     for (Place place in places) {
@@ -186,10 +253,12 @@ class _BuildRoutePageState extends State<BuildRoutePage> {
           longitude: place.longitude,
           latitude: place.latitude,
           distances: RouteCalculator(context).getClosest(place, places));
+      unfilteredPlacesWithDistances.add(placeWithDistances);
       placesWithDistances.add(placeWithDistances);
-      print(placeWithDistances.nickname);
     }
     _initPlacesCards();
+    _changeRouteSchemeSize(true);
+    gettingData = false;
     setState(() {
       isLoading = false;
     });
@@ -225,66 +294,103 @@ class _BuildRoutePageState extends State<BuildRoutePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Return(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Return(),
+                    ],
+                  ),
                   Center(
                     child: Text(
-                      pageTitle,
+                      'Referência: ' + pageTitle,
                       style: TextStyle(
                           fontWeight: FontWeight.w600,
                           color: Theme.of(context).primaryColor),
                     ),
                   ),
-                  IconButton(
-                    onPressed: logPlacesWithDistances.length <= 1
-                        ? null
-                        : _returnPlaceWithDistancesToList,
-                    icon: const Icon(Icons.backspace_outlined),
-                    color: Theme.of(context).primaryColor,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      IconButton(
+                        onPressed: logPlacesWithDistances.length <= 1
+                            ? null
+                            : _returnPlaceWithDistancesToList,
+                        icon: const Icon(Icons.backspace_outlined),
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
             Expanded(
               flex: 9,
-              child: ListView.builder(
-                  padding: const EdgeInsets.all(0),
-                  itemCount: cards.length,
-                  itemBuilder: (ctx, index) {
-                    final cd = cards[index];
-                    return cd;
-                  }),
+              child: gettingData
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(0),
+                      itemCount: cards.length,
+                      itemBuilder: (ctx, index) {
+                        final cd = cards[index];
+                        return cd;
+                      }),
             ),
             Expanded(
-              flex: 5,
-              child: SingleChildScrollView(
-                child: Container(
-                    decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor,
-                        border: Border(
-                            top: BorderSide(
-                                width: 2,
-                                color: Theme.of(context)
-                                    .scaffoldBackgroundColor))),
-                    width: double.infinity,
-                    child: Column(
-                      children: [
-                        OutlinedButton(
-                          onPressed: () {
-                            OuterMapsOperations(logPlacesWithDistances)
-                                .openMaps();
-                          },
-                          child: const Text('Concluir (Mapas Externos)'),
+              flex: 1,
+              child: gettingData
+                  ? const Center(child: CircularProgressIndicator())
+                  : Container(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                            shape: const RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(0))),
+                            backgroundColor: Theme.of(context).primaryColor,
+                            shadowColor:
+                                Theme.of(context).scaffoldBackgroundColor),
+                        onPressed: logPlacesWithDistances.length > 2
+                            ? () {
+                                OuterMapsOperations(logPlacesWithDistances)
+                                    .openMaps();
+                              }
+                            : null,
+                        child: Text(
+                          'Concluir (Mapas Externos)',
+                          style: TextStyle(
+                              color: Theme.of(context).scaffoldBackgroundColor),
                         ),
-                        Transform.rotate(
-                          angle: 90 * math.pi / 180,
-                          child: Icon(
-                            Icons.alt_route_sharp,
-                            color: Theme.of(context).scaffoldBackgroundColor,
-                          ),
-                        )
-                      ],
-                    )),
-              ),
+                      ),
+                    ),
+            ),
+            Expanded(
+              flex: 4,
+              child: gettingData
+                  ? const Center(child: CircularProgressIndicator())
+                  : Container(
+                      decoration: BoxDecoration(
+                          color:
+                              Theme.of(context).primaryColor.withOpacity(0.7),
+                          border: Border(
+                              top: BorderSide(
+                                  width: 2,
+                                  color: Theme.of(context)
+                                      .scaffoldBackgroundColor))),
+                      width: double.infinity,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            Wrap(
+                              children: [
+                                ..._buildTextsWithIcon(),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
             ),
           ],
         ),
