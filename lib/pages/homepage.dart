@@ -5,9 +5,10 @@ import 'package:route_r_dam/pages/build_route_page.dart';
 
 import 'package:route_r_dam/pages/manage_places.dart';
 import 'package:route_r_dam/pages/select_starting_point.dart';
-import 'package:route_r_dam/pages/show_map.dart';
 import 'package:route_r_dam/pages/test.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'automated_route_builder.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -17,27 +18,14 @@ class HomePage extends StatelessWidget {
         context, MaterialPageRoute(builder: (context) => const ManagePlaces()));
   }
 
-  _openTestPage(context) {
-    Navigator.push(
-        context, MaterialPageRoute(builder: (context) => const TestPage()));
-  }
-
-  _openBuildRoutePage(context) {
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => BuildRoutePage(Place(
-                id: -1,
-                address: 'Local Atual',
-                categories: {},
-                latitude: 0.0,
-                longitude: 0.0,
-                nickname: 'Local Atual'))));
+  _openAutomatedRouteBuilder(context) {
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => const AutomatedRouteBuilder()));
   }
 
   _openSelectStartingPoint(context) {
     Navigator.push(context,
-        MaterialPageRoute(builder: (context) => SelectStartingPoint()));
+        MaterialPageRoute(builder: (context) => const SelectStartingPoint()));
   }
 
   @override
@@ -128,10 +116,11 @@ Gerenciar Localidades: Cadastre, altere ou exclua localidades.
                       child: MenuButtom(
                           'Construir Rota', _openSelectStartingPoint),
                     ),
-                    Expanded(
-                        flex: 2,
-                        child:
-                            MenuButtom('Rota Automática', _openManagePlaces)),
+
+                    // Expanded(
+                    //     flex: 2,
+                    //     child: MenuButtom(
+                    //         'Rota Automática', _openAutomatedRouteBuilder)),
                     Expanded(
                         flex: 2,
                         child: MenuButtom(
